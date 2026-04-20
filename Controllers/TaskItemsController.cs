@@ -52,8 +52,8 @@ namespace SmartTaskTracker.API.Controllers
             return Ok(task);    
         }
 
-        // Only Admins can create tasks
-        [Authorize(Policy = "AdminOnly")]
+        //Only Managers can create tasks
+        [Authorize(Policy = "ManagerOnly")]
         [HttpPost]
         public async Task<ActionResult<TaskItem>> CreateTask(TaskItem taskItem)
         {
@@ -63,6 +63,8 @@ namespace SmartTaskTracker.API.Controllers
             return CreatedAtAction(nameof(GetTaskItem), new { id = taskItem.TaskID }, taskItem);
         }
 
+        // Managers and Developers can update tasks
+        [Authorize(Policy = "ManagerOrDeveloper")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, TaskItem taskItem)
         {
@@ -76,8 +78,8 @@ namespace SmartTaskTracker.API.Controllers
             return NoContent();
         }
 
-        //Only Admins can delete tasks
-        [Authorize(Policy = "AdminOnly")]
+        //Only Managers can delete tasks
+        [Authorize(Policy = "ManagerOnly")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTask(int id)
         {
