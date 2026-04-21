@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartTaskTracker.API.Data;
 using SmartTaskTracker.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using SmartTaskTracker.API.Models.DTOs;
 
 namespace SmartTaskTracker.API.Controllers
 {
@@ -37,7 +38,7 @@ namespace SmartTaskTracker.API.Controllers
 
         // Get tasks for a specific project, including related entities
         [HttpGet("project/{projectId}")]
-        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasksByProject(int projectID)
+        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasksByProject(int projectId)
         {
             var tasks = await _context.Tasks
                 .Include(t => t.AssignedUser)
@@ -104,7 +105,7 @@ namespace SmartTaskTracker.API.Controllers
             }
 
             // Get the current user ID from the JWT token
-            var currentUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+            var currentUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
             if (currentUserClaim == null)
             {
                 return Unauthorized("User ID claim not found in token.");
@@ -119,11 +120,11 @@ namespace SmartTaskTracker.API.Controllers
                 Title = request.Title,
                 Description = request.Description,
                 ProjectID = request.ProjectID,
-                AssignedUserID = request.AssignedUserID,
+                AssignedTo = request.AssignedTo,
                 StatusID = request.StatusID,
                 PriorityID = request.PriorityID,
-                CreatedByUserID = currentUserId,
-                CreatedAt = DateTime.UtcNow
+                CreatedBy = currentUserId,
+                CreatedAt = DateTime.UtcNow,
                 Archived = false,
                 ModifiedAt = null,
                 ModifiedBy = null,
