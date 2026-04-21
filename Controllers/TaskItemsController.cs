@@ -17,6 +17,7 @@ namespace SmartTaskTracker.API.Controllers
         _context = context;
         }
 
+        // Get all tasks, including related entities
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetTaskItems()
         {
@@ -34,6 +35,25 @@ namespace SmartTaskTracker.API.Controllers
             return Ok(tasks);
         }
 
+        // Get tasks for a specific project, including related entities
+        [HttpGet("project/{projectId}")]
+        public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasksByProject(int projectID)
+        {
+            var tasks = await _context.Tasks
+                .Include(t => t.AssignedUser)
+                .Include(t => t.Project)
+                .Include(t => t.Status)
+                .Include(t => t.Priority)
+                .Include(t => t.ArchivedByUser)
+                .Include(t => t.CreatedByUser)
+                .Include(t => t.ModifiedByUser)
+                .Include(t => t.DeletedByUser)
+                .Where(t => t.ProjectID == projectId && t.DeletedAt == null)
+                .ToListAsync();
+            return Ok(tasks);
+        }
+
+        // Get a specific task by ID, including related entities
         [HttpGet("{id}")]
         public async Task<ActionResult<TaskItem>> GetTaskItem(int id)
         {
@@ -52,6 +72,8 @@ namespace SmartTaskTracker.API.Controllers
             return Ok(task);    
         }
 
+
+        // Get tasks for a specific project
         //Only Managers can create tasks
         [Authorize(Policy = "ManagerOnly")]
         [HttpPost]
@@ -88,6 +110,7 @@ namespace SmartTaskTracker.API.Controllers
                 return Unauthorized("User ID claim not found in token.");
 
             }
+            // Parse the user ID claim to an integer
             int currentUserId = int.Parse(currentUserClaim.Value);
             
             // Create a new TaskItem entity
@@ -106,9 +129,11 @@ namespace SmartTaskTracker.API.Controllers
                 ModifiedBy = null,
             };
 
+            // Add the new task to the database
             _context.Tasks.Add(newTaskItem);
             await _context.SaveChangesAsync();
 
+            // Return a response with the created task's ID
             return Ok(new
             {
                 message = "Task created successfully",
@@ -131,6 +156,7 @@ namespace SmartTaskTracker.API.Controllers
             return NoContent();
         }
 
+        // Soft delete a task by setting the DeletedAt timestamp
         //Only Managers can delete tasks
         [Authorize(Policy = "ManagerOnly")]
         [HttpDelete("{id}")]
