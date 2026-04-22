@@ -34,6 +34,7 @@ namespace SmartTaskTracker.API.Controllers
                         startDate = p.StartDate,
                         endDate = p.EndDate,
                         createdAt = p.CreatedAt,
+                        createdBy = p.CreatedBy,
                         modifiedAt = p.ModifiedAt,
                         archived = p.Archived,
                     })
@@ -63,6 +64,7 @@ namespace SmartTaskTracker.API.Controllers
                         startDate = p.StartDate,
                         endDate = p.EndDate,
                         createdAt = p.CreatedAt,
+                        createdBy = p.CreatedBy,
                         modifiedAt = p.ModifiedAt,
                         archived = p.Archived,
                     })

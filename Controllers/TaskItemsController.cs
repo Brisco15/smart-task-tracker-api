@@ -9,7 +9,7 @@ namespace SmartTaskTracker.API.Controllers
 {
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/tasks")]
     public class  TaskItemsController : ControllerBase 
     {
         private readonly AppDbContext _context;
