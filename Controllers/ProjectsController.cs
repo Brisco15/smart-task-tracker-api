@@ -25,6 +25,7 @@ namespace SmartTaskTracker.API.Controllers
             try
             {     
                 var projects = await _context.Projects
+                    .Include(p => p.CreatedByUser)
                     .Where(p => p.DeletedAt == null && p.Archived == false)
                     .Select(p => new 
                     {
@@ -34,7 +35,7 @@ namespace SmartTaskTracker.API.Controllers
                         startDate = p.StartDate,
                         endDate = p.EndDate,
                         createdAt = p.CreatedAt,
-                        createdBy = p.CreatedBy,
+                        createdBy = p.CreatedByUser != null ? new { p.CreatedByUser.UserID, p.CreatedByUser.UserName } : null,
                         modifiedAt = p.ModifiedAt,
                         archived = p.Archived,
                     })
@@ -55,6 +56,7 @@ namespace SmartTaskTracker.API.Controllers
             try
             {
                 var project = await _context.Projects
+                    .Include(p => p.CreatedByUser)
                     .Where(p => p.ProjectID == id && p.DeletedAt == null && p.Archived == false)
                     .Select(p => new 
                     {
@@ -64,7 +66,7 @@ namespace SmartTaskTracker.API.Controllers
                         startDate = p.StartDate,
                         endDate = p.EndDate,
                         createdAt = p.CreatedAt,
-                        createdBy = p.CreatedBy,
+                        createdBy = p.CreatedByUser != null ? new { p.CreatedByUser.UserID, p.CreatedByUser.UserName } : null,
                         modifiedAt = p.ModifiedAt,
                         archived = p.Archived,
                     })

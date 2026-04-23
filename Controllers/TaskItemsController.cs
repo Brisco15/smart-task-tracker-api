@@ -165,9 +165,54 @@ namespace SmartTaskTracker.API.Controllers
         {
             var taskItem = await _context.Tasks.FindAsync(id);
             if (taskItem == null) { return NotFound(); }
-            _context.Tasks.Remove(taskItem);
+
+            //Get the current user ID from the JWT token
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int? currentUserId = null;
+            if(currentUserIdClaim != null)
+            {
+                currentUserId = int.Parse(currentUserIdClaim.Value);
+            }
+
+            //soft delete
+            taskItem.DeletedAt = DateTime.UtcNow;
+            taskItem.DeletedBy = currentUserId;
+
+            
             await _context.SaveChangesAsync();
             return NoContent();     
+        }
+
+        [Authorize(Policy ="AdminOrManager")]
+        [HttpPatch("{id}/archive")]
+        public async Task<IActionResult> ArchiveTask(int id)
+        {
+            var taskItem = await _context.Tasks.FindAsync(id);
+            if (taskItem == null) { return NotFound(); }
+
+            //Get the current user ID from the JWT token
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int? currentUserId = null;
+            if(currentUserIdClaim != null)
+            {
+                currentUserId = int.Parse(currentUserIdClaim.Value);
+            }
+
+            //archive
+            taskItem.Archived = !taskItem.Archived;
+            taskItem.ArchivedAt = DateTime.UtcNow;
+            taskItem.ArchivedBy = taskItem.Archived ? currentUserId : null;
+            taskItem.ModifiedAt = DateTime.UtcNow;
+            taskItem.ModifiedBy = currentUserId;
+
+            
+            await _context.SaveChangesAsync();
+            return Ok(new     
+            {
+                message = taskItem.Archived ? "Task archived successfully" : "Task unarchived successfully",
+                archived = taskItem.Archived,
+
+            });
         }
     }
 }
