@@ -144,17 +144,94 @@ namespace SmartTaskTracker.API.Controllers
 
         // Managers and Developers can update tasks
         [Authorize(Policy = "ManagerOrDeveloper")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTask(int id, TaskItem taskItem)
+        [HttpPut("project/{projectId}/task/{taskId}")]
+        public async Task<IActionResult> UpdateTaskByProject(int projectId, int taskId, [FromBody] UpdateTaskRequest request)
         {
-            if(id != taskItem.TaskID)
+            try
             {
-                return BadRequest();
+                Console.WriteLine($"Received update request for projectId: {projectId}, taskId: {taskId}");
+                var task = await _context.Tasks.FindAsync(taskId);
+                if(request == null)
+                {
+                    return BadRequest("Request body is null.");
+                }
+
+                if(task == null)
+                {
+                    return NotFound();
+                }
+
+                if(!string.IsNullOrWhiteSpace(request.Title) && await _context.Tasks.AnyAsync(t => t.Title == request.Title && t.TaskID != id))
+                {    
+                    return Conflict("A task with the same title already exists in this project."); 
+                }
+
+                // Get the current user ID from the JWT token
+                var currentUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if(currentUserClaim != null)
+                {
+                    int currentUserId = int.Parse(currentUserClaim.Value);
+                    task.ModifiedBy = currentUserId;
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Title))
+                {
+                    task.Title = request.Title;
+                }
+
+                if (request.Description != null)
+                {
+                    task.Description = request.Description; 
+                }
+
+                if (request.AssignedTo != 0)
+                {
+                    task.AssignedTo = request.AssignedTo;
+                }
+
+                if (request.StatusID != 0)
+                {
+                    task.StatusID = request.StatusID;
+                }
+
+                if (request.PriorityID != 0)
+                {
+                    task.PriorityID = request.PriorityID;
+                }
+
+                task.ModifiedAt = DateTime.UtcNow;
+                task.ModifiedBy = currentUserId;
+
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine($"Task with ID {taskId} updated successfully.");
+
+                // Return a response indicating success
+                return Ok(new
+                {
+                    message = Task with ID {taskId} updated successfully",
+                    task = new {
+                        TaskID= task.TaskID,
+                        Title= task.Title,
+                        Description= task.Description,
+                        ProjectID= task.ProjectID,
+                        AssignedTo= task.AssignedTo,
+                        StatusID= task.StatusID,
+                        PriorityID= task.PriorityID,
+                        CreatedBy= task.CreatedBy,
+                        CreatedAt= task.CreatedAt,
+                        ModifiedBy= task.ModifiedBy,
+                        ModifiedAt= task.ModifiedAt
+                    }
+                });
+
+            }
+            catch (Exception ex) 
+            {
+                Console.WriteLine($"Error in UpdateTaskByProject: {ex.Message}");
+                return StatusCode(500, new { error = "An error occurred while updating the task.", details = ex.Message });
             }
 
-            _context.Tasks.Update(taskItem);
-            await _context.SaveChangesAsync();
-            return NoContent();
         }
 
         // Soft delete a task by setting the DeletedAt timestamp
@@ -183,6 +260,7 @@ namespace SmartTaskTracker.API.Controllers
             return NoContent();     
         }
 
+        // Managers and Admins can archive/unarchive tasks
         [Authorize(Policy ="AdminOrManager")]
         [HttpPatch("{id}/archive")]
         public async Task<IActionResult> ArchiveTask(int id)

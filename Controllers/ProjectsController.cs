@@ -203,7 +203,7 @@ namespace SmartTaskTracker.API.Controllers
                 
                 Console.WriteLine($"✅ Project {id} updated successfully");
 
-                // ⭐ Gebe die aktualisierten Daten zurück
+                // Return a response indicating success
                 return Ok(new 
                 {
                     message = "Project updated successfully",
