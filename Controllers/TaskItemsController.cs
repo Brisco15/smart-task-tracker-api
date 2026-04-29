@@ -144,7 +144,7 @@ namespace SmartTaskTracker.API.Controllers
 
         // Managers and Developers can update tasks
         [Authorize(Policy = "ManagerOrDeveloper")]
-        [HttpPut("project/{projectId}/task/{taskId}")]
+        [HttpPut("project/{projectId}/{taskId}")]
         public async Task<IActionResult> UpdateTaskByProject(int projectId, int taskId, [FromBody] UpdateTaskRequest request)
         {
             try
@@ -161,17 +161,19 @@ namespace SmartTaskTracker.API.Controllers
                     return NotFound();
                 }
 
-                if(!string.IsNullOrWhiteSpace(request.Title) && await _context.Tasks.AnyAsync(t => t.Title == request.Title && t.TaskID != id))
+                if(!string.IsNullOrWhiteSpace(request.Title) && await _context.Tasks.AnyAsync(t => t.Title == request.Title && t.TaskID != taskId))
                 {    
                     return Conflict("A task with the same title already exists in this project."); 
                 }
 
                 // Get the current user ID from the JWT token
                 var currentUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-                if(currentUserClaim != null)
+                int? currentUserId = null;
+
+                if (currentUserClaim != null)
                 {
-                    int currentUserId = int.Parse(currentUserClaim.Value);
-                    task.ModifiedBy = currentUserId;
+                    currentUserId = int.Parse(currentUserClaim.Value);
+                    
                 }
 
                 if (!string.IsNullOrWhiteSpace(request.Title))
@@ -209,19 +211,20 @@ namespace SmartTaskTracker.API.Controllers
                 // Return a response indicating success
                 return Ok(new
                 {
-                    message = Task with ID {taskId} updated successfully",
+                    message = "Task with ID {taskId} updated successfully",
                     task = new {
-                        TaskID= task.TaskID,
-                        Title= task.Title,
-                        Description= task.Description,
-                        ProjectID= task.ProjectID,
-                        AssignedTo= task.AssignedTo,
-                        StatusID= task.StatusID,
-                        PriorityID= task.PriorityID,
-                        CreatedBy= task.CreatedBy,
-                        CreatedAt= task.CreatedAt,
-                        ModifiedBy= task.ModifiedBy,
-                        ModifiedAt= task.ModifiedAt
+                        taskID= task.TaskID,
+                        title= task.Title,
+                        description= task.Description,
+                        projectID= task.ProjectID,
+                        assignedTo= task.AssignedTo,
+                        statusID= task.StatusID,
+                        priorityID= task.PriorityID,
+                        createdBy= task.CreatedBy,
+                        createdAt= task.CreatedAt,
+                        modifiedBy= task.ModifiedBy,
+                        modifiedAt= task.ModifiedAt,
+                        archived= task.Archived
                     }
                 });
 
