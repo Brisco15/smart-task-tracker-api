@@ -29,7 +29,7 @@ namespace SmartTaskTracker.API.Models
         public DateTime? EndTime { get; set; }
 
         [Column("duration")]
-        public int? Duration { get; set; } ;
+        public double? Duration { get; set; } 
         
     }
 }
