@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartTaskTracker.API.Data;
 using SmartTaskTracker.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SmartTaskTracker.API.Controllers
 {
@@ -35,6 +36,73 @@ namespace SmartTaskTracker.API.Controllers
             if (timeTracking == null) { return NotFound(); }
             return Ok(timeTracking);
         }
+
+        // Endpoint to get total time tracked for a specific task
+        [HttpGet("task/{taskId}")]
+        public async Task<IActionResult> GetTimeTrackingForTask(int taskId)
+        {
+            var timeTrackings = await _context.TimeTrackings
+                .Include(tt => tt.Task)
+                .Include(tt => tt.User)
+                .Where(tt => tt.TaskID == taskId && tt.Duration != null)
+                .SumAsync(tt => tt.Duration);
+            return Ok(timeTrackings);
+        }
+
+        // Endpoint to start time tracking for a task
+        // Only developers can start time tracking
+        [Authorize(Policy = "DeveloperOnly")]
+        [HttpPost("start")]
+        public async Task<IActionResult> StartTimeTracking(int taskId, int userId)
+        {
+            // Check if there's an active time tracking for the user
+            var activeTracking = await _context.TimeTrackings
+                .FirstOrDefaultAsync(tt => tt.UserID == userId && tt.EndTime == null);
+
+            // If there's an active tracking, return a bad request response
+            if (activeTracking != null)
+            {
+                return BadRequest("User already has an active time tracking.");
+            }
+
+            // Create a new time tracking entry
+            var entry = new TimeTracking
+            {
+                TaskID = taskId,
+                UserID = userId,
+                StartTime = DateTime.UtcNow
+            };
+            _context.TimeTrackings.Add(entry);
+            await _context.SaveChangesAsync();
+            return Ok(entry);
+        }
+
+        // Endpoint to stop time tracking for a task
+        // Only developers can stop time tracking
+        [Authorize(Policy = "DeveloperOnly")]
+        [HttpPost("stop")]
+        public async Task<IActionResult> StopTimeTracking(int taskId, int userId)
+        {
+            // Find the active time tracking entry for the user and task
+            var entry = await _context.TimeTrackings
+                .FirstOrDefaultAsync(tt => tt.UserID == userId && tt.TaskID == taskId && tt.EndTime == null);
+
+            // If no active entry is found, return a not found response
+            if (entry == null)
+            {
+                return NotFound("No active time tracking found for the specified task and user.");
+            }
+            // Set the end time and calculate the duration
+            entry.EndTime = DateTime.UtcNow;
+            // Calculate duration in minutes
+            var duration = (entry.EndTime.Value - entry.StartTime).TotalMinutes;
+            entry.Duration = duration;
+
+            _context.TimeTrackings.Update(entry);
+            await _context.SaveChangesAsync();
+            return Ok(entry);
+        }
+
         [HttpPost]
         public async Task<ActionResult<TimeTracking>> CreateTimeTracking(TimeTracking timeTracking)
         {
