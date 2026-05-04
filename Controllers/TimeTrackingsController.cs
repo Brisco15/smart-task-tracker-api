@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartTaskTracker.API.Data;
 using SmartTaskTracker.API.Models;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;  // ✅ Füge diesen Import hinzu!
+using System.Security.Claims;
 
 namespace SmartTaskTracker.API.Controllers
 {
@@ -18,15 +18,6 @@ namespace SmartTaskTracker.API.Controllers
             _context = context;
         }
         
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TimeTracking>>> GetTimeTrackings()
-        {
-            var timeTrackings = await _context.TimeTrackings
-                .Include(tt => tt.Task)
-                .Include(tt => tt.User)
-                .ToListAsync();
-            return Ok(timeTrackings);
-        }
         
         [HttpGet("{id}")]
         public async Task<ActionResult<TimeTracking>> GetTimeTracking(int id)
@@ -43,18 +34,77 @@ namespace SmartTaskTracker.API.Controllers
         [HttpGet("project/{projectId}")]
         public async Task<IActionResult> GetTimeTrackingForProject(int projectId)
         {
-            var timeTrackings = await _context.TimeTrackings
-                .Include(tt => tt.Task)
-                .Include(tt => tt.User)
-                .Where(tt => tt.Task!.ProjectID == projectId && tt.Duration != null)  // ✅ ! hinzugefügt
-                .GroupBy(tt => tt.TaskID)
-                .Select(g => new
-                {
-                    taskID = g.Key,
-                    totalDuration = g.Sum(tt => tt.Duration)
-                })
-                .ToListAsync();
-            return Ok(timeTrackings);
+            try
+            {
+                Console.WriteLine($"🔍 GetTimeTrackingForProject called for projectId: {projectId}");
+
+                // Fetch all time trackings with non-null duration first
+                var allTimeTrackings = await _context.TimeTrackings
+                    .Where(tt => tt.Duration != null)
+                    .ToListAsync();
+                
+                Console.WriteLine($"📊 Total time trackings in DB: {allTimeTrackings.Count}");
+
+                // Fetch all tasks for the specified project
+                var tasks = await _context.Tasks
+                    .Where(t => t.ProjectID == projectId)
+                    .Select(t => new { t.TaskID, t.Title })
+                    .ToListAsync();
+                
+                Console.WriteLine($"📋 Tasks for project {projectId}: {tasks.Count}");
+                // Create a HashSet of TaskIDs for efficient lookup
+                var taskIds = tasks.Select(t => t.TaskID).ToHashSet();
+
+                // Filter time trackings to only those that belong to tasks in the specified project
+                var projectTimeTrackings = allTimeTrackings
+                    .Where(tt => taskIds.Contains(tt.TaskID))
+                    .ToList();
+                
+                Console.WriteLine($"⏱️ Time trackings for this project: {projectTimeTrackings.Count}");
+
+                // Group by TaskID and calculate total duration and count of entries
+                var taskBreakdown = projectTimeTrackings
+                    .GroupBy(tt => tt.TaskID)
+                    .Select(g => new
+                    {
+                        taskID = g.Key,
+                        taskName = tasks.FirstOrDefault(t => t.TaskID == g.Key)?.Title ?? "Unknown Task",
+                        totalDuration = (double)g.Sum(tt => tt.Duration ?? 0),
+                        entries = g.Count()
+                    })
+                    .ToList();
+                
+                Console.WriteLine($"✅ Returning {taskBreakdown.Count} task breakdown entries");
+                
+                return Ok(taskBreakdown);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error in GetTimeTrackingForProject: {ex.Message}");
+                Console.WriteLine($"   Stack Trace: {ex.StackTrace}");
+                return StatusCode(500, new { error = "Failed to retrieve time tracking data", details = ex.Message });
+            }
+        }
+
+        // Endpoint to get total time tracked for a specific project
+        [HttpGet("project/{projectId}/total")]
+        public async Task<IActionResult> GetTotalTimeTrackingForProject(int projectId)
+        {
+            try
+            {
+                // Fetch all time trackings with non-null duration first
+                var totalDuration = await _context.TimeTrackings
+                    .Include(tt => tt.Task)
+                    .Where(tt => tt.Task != null && tt.Task.ProjectID == projectId && tt.Duration != null)
+                    .SumAsync(tt => tt.Duration ?? 0);
+                
+                return Ok((double)totalDuration);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error in GetTotalTimeTrackingForProject: {ex.Message}");
+                return StatusCode(500, new { error = "Failed to retrieve total time", details = ex.Message });
+            }
         }
 
         // Endpoint to get total time tracked for a specific task
@@ -65,7 +115,7 @@ namespace SmartTaskTracker.API.Controllers
                 .Include(tt => tt.Task)
                 .Include(tt => tt.User)
                 .Where(tt => tt.TaskID == taskId && tt.Duration != null)
-                .SumAsync(tt => tt.Duration ?? 0);  // ✅ ?? 0 hinzugefügt
+                .SumAsync(tt => tt.Duration ?? 0);  
             return Ok(timeTrackings);
         }
 
@@ -73,7 +123,7 @@ namespace SmartTaskTracker.API.Controllers
         // Only developers can start time tracking
         [Authorize(Policy = "DeveloperOnly")]
         [HttpPost("start")]
-        public async Task<IActionResult> StartTimeTracking([FromQuery] int taskId) 
+        public async Task<IActionResult> StartTimeTracking([FromQuery] int taskId)
         {
             // Get the user ID from the JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -81,7 +131,20 @@ namespace SmartTaskTracker.API.Controllers
             {
                 return Unauthorized("User ID not found in token.");
             }
+
             int userId = int.Parse(userIdClaim.Value);
+            
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskId);
+            if(task == null)
+            {
+                return NotFound("Task not found.");
+            }
+
+            if(task.AssignedTo != userId) 
+            { 
+                return Forbid("User is not assigned to this task.");
+            }
+            
 
             // Check if there's an active time tracking for the user
             var activeTracking = await _context.TimeTrackings
@@ -112,13 +175,24 @@ namespace SmartTaskTracker.API.Controllers
         public async Task<IActionResult> StopTimeTracking([FromQuery] int taskId)  
         {
             // Get the user ID from the JWT token
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);  // ✅ Variable umbenannt
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier); 
             if (userIdClaim == null)
             {
                 return Unauthorized("User ID not found in token.");
             }
             int userId = int.Parse(userIdClaim.Value);
 
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskId);
+            if (task == null) 
+            { 
+                return NotFound("Task not found."); 
+            }
+
+            if (task.AssignedTo != userId)
+            {
+                return Forbid("User is not assigned to this task.");
+            }
+            
             // Find the active time tracking entry for the user and task
             var entry = await _context.TimeTrackings
                 .FirstOrDefaultAsync(tt => tt.UserID == userId && tt.TaskID == taskId && tt.EndTime == null);
@@ -133,32 +207,13 @@ namespace SmartTaskTracker.API.Controllers
             entry.EndTime = DateTime.UtcNow;
             // Calculate duration in minutes
             var duration = (entry.EndTime.Value - entry.StartTime).TotalMinutes;
-            entry.Duration = duration;
+            entry.Duration = (int?)duration;
 
             _context.TimeTrackings.Update(entry);
             await _context.SaveChangesAsync();
             return Ok(entry);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<TimeTracking>> CreateTimeTracking(TimeTracking timeTracking)
-        {
-            if (timeTracking == null) { return BadRequest(); }
-            _context.TimeTrackings.Add(timeTracking);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetTimeTracking), new { id = timeTracking.TimeTrackingID }, timeTracking);
-        }
         
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTimeTracking(int id, TimeTracking timeTracking)
-        {
-            if (id != timeTracking.TimeTrackingID)
-            {
-                return BadRequest();
-            }
-            _context.TimeTrackings.Update(timeTracking);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
     }
 }
