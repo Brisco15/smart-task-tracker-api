@@ -133,14 +133,14 @@ namespace SmartTaskTracker.API.Controllers
             }
 
             int userId = int.Parse(userIdClaim.Value);
-            
+            // Verify that the task exists and is assigned to the user
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskId);
             if(task == null)
             {
                 return NotFound("Task not found.");
             }
-
-            if(task.AssignedTo != userId) 
+            // Ensure the user is assigned to the task
+            if (task.AssignedTo != userId) 
             { 
                 return Forbid("User is not assigned to this task.");
             }
@@ -182,12 +182,13 @@ namespace SmartTaskTracker.API.Controllers
             }
             int userId = int.Parse(userIdClaim.Value);
 
+            // Verify that the task exists and is assigned to the user
             var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskID == taskId);
             if (task == null) 
             { 
                 return NotFound("Task not found."); 
             }
-
+            // Ensure the user is assigned to the task
             if (task.AssignedTo != userId)
             {
                 return Forbid("User is not assigned to this task.");
@@ -212,8 +213,6 @@ namespace SmartTaskTracker.API.Controllers
             _context.TimeTrackings.Update(entry);
             await _context.SaveChangesAsync();
             return Ok(entry);
-        }
-
-        
+        }   
     }
 }
