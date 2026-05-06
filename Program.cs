@@ -5,7 +5,7 @@ using Azure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Text.Json.Serialization; // ✅ Hinzufügen
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,24 +65,25 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AllRoles", policy => policy.RequireRole("Admin", "Developer", "Manager"));
 });
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Add services to the container
 builder.Services.AddOpenApi();
+
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
+// ✅ FIXED: PostgreSQL Database Context (added closing parenthesis)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ✅ JSON-Serialisierung mit ReferenceHandler konfigurieren
+// JSON Serialization Configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -94,9 +95,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); 
 
 var app = builder.Build();
+
+// Disable caching middleware
 app.Use(async (context, next) =>
 {
-    // Disable caching for API responses
     if (context.Request.Path.StartsWithSegments("/api"))
     {
         context.Response.Headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -106,20 +108,17 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseCors("AllowAngular");
-
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(); //  Swagger activation
-    app.UseSwaggerUI(); //  Swagger UI activation
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-//app.UseHttpsRedirection();
 
+// Middleware order is important!
 app.UseCors("AllowAngular");
-app.UseAuthentication(); // JWT-Authentification activation
+app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapControllers(); // Controller-Routes registration
+app.MapControllers();
 
 app.Run();

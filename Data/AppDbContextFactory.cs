@@ -1,16 +1,19 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
-namespace SmartTaskTracker.API.Data;
-
-public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+namespace SmartTaskTracker.API.Data
 {
-    public AppDbContext CreateDbContext(string[] args)
+    public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
     {
-        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-        // Use SQL Server for production (matching your schema)
-        optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=smarttasktracker;Trusted_Connection=True;");
+        public AppDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-        return new AppDbContext(optionsBuilder.Options);
+            // ✅ Changed from UseSqlServer to UseNpgsql for PostgreSQL
+            optionsBuilder.UseNpgsql("Host=localhost;Database=SmartTaskTrackerDB;Username=postgres;Password=postgres");
+
+            return new AppDbContext(optionsBuilder.Options);
+        }
     }
 }
