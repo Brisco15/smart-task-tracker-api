@@ -79,7 +79,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ✅ FIXED: PostgreSQL Database Context (added closing parenthesis)
+// PostgreSQL Database Context
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -108,12 +108,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
+// ✅ FIXED: Enable Swagger in Production
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Smart Task Tracker API v1");
+    c.RoutePrefix = "swagger";
+});
 
 // Middleware order is important!
 app.UseCors("AllowAngular");
