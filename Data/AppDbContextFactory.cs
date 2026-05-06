@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Configuration;
 
 namespace SmartTaskTracker.API.Data
 {
@@ -10,7 +9,7 @@ namespace SmartTaskTracker.API.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
 
-            // ✅ Changed from UseSqlServer to UseNpgsql for PostgreSQL
+            // Use PostgreSQL (Npgsql extension is automatically available)
             optionsBuilder.UseNpgsql("Host=localhost;Database=SmartTaskTrackerDB;Username=postgres;Password=postgres");
 
             return new AppDbContext(optionsBuilder.Options);
