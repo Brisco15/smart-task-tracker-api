@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using System;
+using System.IO;
 
 namespace SmartTaskTracker.API.Data
 {
@@ -8,14 +10,27 @@ namespace SmartTaskTracker.API.Data
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            // Build configuration
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile("appsettings.Production.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
             
-            // Read from environment variable (for migrations)
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            // Try to get connection string from multiple sources
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
             
-            // Fallback to localhost for local development
             if (string.IsNullOrEmpty(connectionString))
             {
+                connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            }
+            
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Last resort fallback for local development
                 connectionString = "Host=localhost;Database=SmartTaskTrackerDB;Username=postgres;Password=postgres";
             }
             
