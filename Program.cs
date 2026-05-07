@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Azure Key Vault Integration
+// Azure Key Vault Integration (only if configured)
 if(builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddUserSecrets<Program>();
@@ -79,9 +79,22 @@ builder.Services.AddCors(options =>
     });
 });
 
-// PostgreSQL Database Context
+// ✅ FIXED: Database Context - Properly read connection string
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    // Fallback: read directly from environment variable
+    connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+}
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string 'DefaultConnection' is not configured!");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // JSON Serialization Configuration
 builder.Services.AddControllers()
@@ -108,7 +121,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// ✅ FIXED: Enable Swagger in Production
+// Enable Swagger in Production
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -116,7 +129,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Middleware order is important!
+// Middleware order
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();

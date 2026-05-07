@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using System;
 
 namespace SmartTaskTracker.API.Data
 {
@@ -8,9 +9,17 @@ namespace SmartTaskTracker.API.Data
         public AppDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-
-            // Use PostgreSQL (Npgsql extension is automatically available)
-            optionsBuilder.UseNpgsql("Host=localhost;Database=SmartTaskTrackerDB;Username=postgres;Password=postgres");
+            
+            // Read from environment variable (for migrations)
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+            
+            // Fallback to localhost for local development
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                connectionString = "Host=localhost;Database=SmartTaskTrackerDB;Username=postgres;Password=postgres";
+            }
+            
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }
