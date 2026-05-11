@@ -1,47 +1,133 @@
-# Smart Task Tracker
+# 🚀 Smart Task Tracker
 
-A complete task management system with .NET 10 backend and Angular frontend for project management, time tracking, and role-based access control.
+A full-stack task management application built with Angular and .NET 9, deployed on Microsoft Azure.
 
-## 📋 Overview
+## 📋 Table of Contents
 
-The Smart Task Tracker system consists of two main components:
-- **Backend**: `smartTaskTracker.API` - ASP.NET Core Web API with JWT authentication (.NET 10)
-- **Frontend**: `smart-task-tracker-ui` - Angular Standalone application with Material Design
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Live Demo](#live-demo)
+- [Prerequisites](#prerequisites)
+- [Local Development Setup](#local-development-setup)
+- [Deployment](#deployment)
+- [API Documentation](#api-documentation)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
-## 🚀 Features
+---
 
-### Backend (smartTaskTracker.API)
-- **JWT Authentication**: Secure token-based authentication
-- **Role-Based Authorization**: Admin, Manager, and Developer roles
-- **Project Management**: CRUD operations for projects with archiving
-- **Task Management**: Complete task management with status and priorities
-- **Time Tracking**: Start/stop timer per task with duration calculation
-- **Entity Framework Core 10**: SQL Server LocalDB integration
-- **CORS Support**: Configured for Angular frontend
-- **Swagger/OpenAPI**: Interactive API documentation
-- **Soft Delete**: Safe deletion without permanent data loss
-- **Azure Key Vault Integration**: Secure secret management for production
+## ✨ Features
 
-### Frontend (smart-task-tracker-ui)
-- **Dashboard**: Overview with statistics, charts, and time tracking
-- **Project Management**: Project CRUD with archiving
-- **Task Management**: Task board with filtering and time tracking
-- **User Management**: Admin panel for user management
-- **Angular Material**: Modern UI components
-- **Chart.js**: Interactive visualizations
-- **Responsive Design**: Mobile-friendly layout
+- **User Authentication & Authorization**
+  - JWT-based authentication
+  - Role-based access control (Admin, Manager, Developer)
+  - Secure password hashing
+
+- **Project Management**
+  - Create, read, update, and delete projects
+  - Assign projects to teams
+  - Track project status
+
+- **Task Management**
+  - Create and assign tasks to users
+  - Set priorities and deadlines
+  - Update task status (To Do, In Progress, Done)
+  - Task filtering and sorting
+
+- **User Management**
+  - User registration and login
+  - Role assignment
+  - User profiles
+
+- **Real-time Updates**
+  - Responsive UI with instant feedback
+  - Angular reactive forms
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework**: Angular 19
+- **Language**: TypeScript
+- **Styling**: CSS3
+- **HTTP Client**: Angular HttpClient
+- **Routing**: Angular Router
+- **Forms**: Reactive Forms
+
+### Backend
+- **Framework**: ASP.NET Core 9.0
+- **Language**: C# 12
+- **ORM**: Entity Framework Core 9.0
+- **Database**: PostgreSQL 16
+- **Authentication**: JWT (JSON Web Tokens)
+- **API Documentation**: Swagger/OpenAPI
+
+### Cloud Infrastructure (Azure)
+- **Frontend Hosting**: Azure Static Web Apps (Free Tier)
+- **Backend Hosting**: Azure App Service (Free F1 Tier)
+- **Database**: Azure Database for PostgreSQL (Burstable B1ms)
+- **Region**: West Europe
+
+---
+
+## 🏗️ Architecture
+
+The Smart Task Tracker application follows a client-server architecture:
+
+- **Client**: Angular frontend (smart-task-tracker-ui) - Consumes the backend API, handles user interactions, and displays data.
+- **Server**: ASP.NET Core Web API (smartTaskTracker.API) - Provides RESTful API endpoints for data access and management.
+- **Database**: PostgreSQL - Stores application data, including user information, projects, tasks, and time tracking.
+- **Cloud Services**: Hosted on Microsoft Azure, utilizing services like Azure App Service, Azure Static Web Apps, and Azure Database for PostgreSQL.
+
+### Component Diagram
+
+```plaintext
+[Angular Frontend] <---> [ASP.NET Core Web API] <---> [PostgreSQL Database]
+        |                           |                            |
+        |                           |                            |
+ [Azure Static Web Apps]    [Azure App Service]    [Azure Database for PostgreSQL]
+```
+
+---
+
+## 🚀 Live Demo
+
+
+---
+
+## 🌐 Live Demo
+
+- **Frontend**: [https://calm-ocean-0dd1c2e03.7.azurestaticapps.net](https://calm-ocean-0dd1c2e03.7.azurestaticapps.net)
+- **Backend API**: [https://smart-task-tracker-api-4114.azurewebsites.net](https://smart-task-tracker-api-4114.azurewebsites.net)
+- **Swagger Documentation**: [https://smart-task-tracker-api-4114.azurewebsites.net/swagger](https://smart-task-tracker-api-4114.azurewebsites.net/swagger)
+
+### Test Credentials
+
+---
 
 ## 📋 Prerequisites
 
-### Backend
-- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [SQL Server LocalDB](https://learn.microsoft.com/sql/database-engine/configure-windows/sql-server-express-localdb) (installed with Visual Studio)
-- [Visual Studio 2022+](https://visualstudio.microsoft.com/) or [Visual Studio Code](https://code.visualstudio.com/)
+### For Local Development
 
-### Frontend
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Angular CLI](https://angular.io/cli) (v18+)
-- Modern web browser (Chrome, Firefox, Edge)
+- **Node.js**: v18.x or higher
+- **npm**: v9.x or higher
+- **.NET SDK**: 9.0 or higher
+- **PostgreSQL**: 16.x
+- **Git**: Latest version
+- **Angular CLI**: `npm install -g @angular/cli`
+- **EF Core Tools**: `dotnet tool install --global dotnet-ef`
+
+### For Azure Deployment
+
+- **Azure CLI**: [Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- **Azure Account**: [Free Account](https://azure.microsoft.com/free/)
+- **Azure Static Web Apps CLI**: `npm install -g @azure/static-web-apps-cli`
+
+
+---
 
 ## 🛠️ Installation
 
@@ -112,11 +198,15 @@ The API URL is already configured in the services (`http://localhost:5260/api`).
 ng serve
 ```
 
+---
+
 ## 🎓 Usage
 
 - Access the frontend at `http://localhost:4200`
 - API documentation available at `http://localhost:5000/swagger`
 - Angular frontend communicates with the backend API for data operations
+
+---
 
 ## ⚙️ Development
 
@@ -130,17 +220,25 @@ ng serve
 
 ### Run Backend Tests
 
+---
+
 ## 📝 Contributing
 
 - Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+---
 
 ## 📄 License
 
 This project is private and intended for personal use.
 
+---
+
 ## 📞 Support
 
 For support, open an issue on GitHub or contact the project maintainer.
+
+---
 
 ## Acknowledgments
 - Inspired by various task management tools and frameworks
@@ -149,6 +247,8 @@ For support, open an issue on GitHub or contact the project maintainer.
 Enjoy tracking your tasks smartly!
 
 The frontend runs on: `http://localhost:4200`
+
+---
 
 ## 🔐 Authentication & Authorization
 
@@ -169,6 +269,8 @@ The frontend runs on: `http://localhost:4200`
 3. **Store Token**: Frontend stores token in `localStorage`
 4. **Authenticate Requests**: Token is sent in `Authorization` header
 5. **Automatic Renewal**: Token expires after 24 hours
+
+---
 
 ## 📚 API Endpoints
 
@@ -208,6 +310,8 @@ PATCH  /api/users/{id}/archive - Archive user (Admin)
 
 Full API documentation: `http://localhost:5260/swagger`
 
+---
+
 ## 🗄️ Database Structure
 
 ### Main Tables
@@ -230,15 +334,19 @@ Full API documentation: `http://localhost:5260/swagger`
 - **Value Converters**: Custom type mapping
 - **Interceptors**: Automatic soft delete implementation
 
+---
+
 ## 🌐 CORS Configuration
 
 The API is configured for the Angular frontend:
 
 **Important**: Adjust the origin URL for production!
 
+---
+
 ## 🎨 Frontend Structure
 
-## 📦 NuGet Packages (.NET 10)
+
 
 
 
@@ -273,6 +381,8 @@ Production build is placed in `dist/smart-task-tracker-ui/`
 2. **Update API URL** in environment files
 3. **Deploy to static hosting** (Azure Static Web Apps, Netlify, Vercel)
 
+---
+
 ## 🔒 Security Best Practices
 
 - ✅ JWT tokens stored in `localStorage` (consider `httpOnly` cookies for production)
@@ -286,6 +396,8 @@ Production build is placed in `dist/smart-task-tracker-ui/`
 - ⚠️ **TODO**: Implement refresh tokens for better security
 - ⚠️ **TODO**: Add rate limiting to prevent abuse
 
+---
+
 ## 🧪 Testing
 
 ### Backend Tests
@@ -294,43 +406,55 @@ Production build is placed in `dist/smart-task-tracker-ui/`
 
 ### Integration Tests
 
+---
+
 ## 🔗 Related Links
 
-- [.NET 10 Documentation](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-10)
+- [.NET 9 Documentation](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-9)
 - [Angular Documentation](https://angular.io/docs)
-- [Entity Framework Core 10](https://learn.microsoft.com/ef/core/)
+- [Entity Framework Core 9](https://learn.microsoft.com/ef/core/)
 - [JWT.io](https://jwt.io/) - JWT Token Debugger
 - [Angular Material](https://material.angular.io/)
 - [Chart.js](https://www.chartjs.org/)
 - [Azure Key Vault](https://learn.microsoft.com/azure/key-vault/)
 
+---
+
 ## 📄 License
 
 This project is private and intended for personal use.
+
+---
 
 ## 👤 Author
 
 **Brisco**
 - GitHub: [@Brisco15](https://github.com/Brisco15)
 
+---
+
 ## 🤝 Contributing
 
 As this is a private project, external contributions are not currently accepted.
 
+---
+
 ## 📊 Project Status
 
-- ✅ Backend API with JWT authentication (.NET 10)
+- ✅ Backend API with JWT authentication (.NET 9)
 - ✅ Frontend with Angular Material
 - ✅ Dashboard with statistics and charts
 - ✅ Time tracking per task
 - ✅ Role-based access control
 - ✅ Project and task management
 - ✅ Admin panel for user management
-- ✅ Entity Framework Core 10
+- ✅ Entity Framework Core 9
 - ✅ Azure Key Vault integration
 - 🔄 Refresh token implementation (planned)
 - 🔄 Unit tests (in progress)
 - 🔄 E2E tests (planned)
+
+---
 
 ## 📈 Future Enhancements
 
@@ -339,33 +463,28 @@ As this is a private project, external contributions are not currently accepted.
 - [ ] Advanced reporting and analytics
 - [ ] File attachments for tasks
 - [ ] Task comments and activity log
-- [ ] Mobile app (React Native/Flutter)
 - [ ] Dark mode support
 - [ ] Multi-language support (i18n)
 - [ ] Export to Excel/PDF
 - [ ] Gantt chart view for projects
 
-## 🆕 What's New in .NET 10
-
-This project leverages the latest .NET 10 features:
-- **Performance Improvements**: Faster startup and runtime
-- **Enhanced Minimal APIs**: Simplified endpoint configuration
-- **Improved EF Core**: Better query performance and new features
-- **Native AOT Support**: Smaller deployment size (optional)
-- **Updated C# 13**: Latest language features
-
 ---
+
 
 **Version**: 1.0.0  
 **Last Updated**: May 2026  
-**.NET Version**: 10.0  
+**.NET Version**: 9.0  
 **Angular Version**: 18+
+
+## 🐛 Known Issues
+
+- First load may be slow due to cold start (free tier)
+- Limited to 60 minutes/day compute time (free App Service)
+
 
 ## 🙏 Acknowledgments
 
-- Microsoft for .NET 10 and Entity Framework Core 10
-- Angular Team for the excellent framework
-- Chart.js for beautiful visualizations
-- Material Design for the UI components
-
-
+- Microsoft Azure for cloud hosting
+- Angular team for the amazing framework
+- ASP.NET Core team for the robust backend framework
+- PostgreSQL for the reliable database
