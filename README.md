@@ -50,7 +50,7 @@ A full-stack task management application built with Angular and .NET 9, deployed
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: Angular 19
+- **Framework**: Angular 21
 - **Language**: TypeScript
 - **Styling**: CSS3
 - **HTTP Client**: Angular HttpClient
